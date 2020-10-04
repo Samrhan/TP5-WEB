@@ -13,8 +13,9 @@
         <div class="card-body">
           <h5 class="card-title" v-if="editingArticle.id !== i.id">{{ i.name }}</h5>
           <input v-else class="card-title" v-model="editingArticle.name">
+          <div></div>
           <p v-if="editingArticle.id !== i.id" class="card-text">{{ i.description }}</p>
-          <input v-else class="card-text" v-model="editingArticle.description">
+          <textarea v-bind:style="{width:'80%'}" v-else class="card-text" v-model="editingArticle.description"></textarea>
         </div>
       </div>
       <div class="card" style="width: 18rem;" id="price">
