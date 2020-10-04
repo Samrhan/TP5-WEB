@@ -11,6 +11,8 @@
           <div>
           <button @click="deleteArticle(article.id)">Supprimer</button>
           <button @click="editArticle(article)">Modifier</button>
+            <button @click="addToPanier(article.id)"  v-if="panier.articles.find(a => a.id === article.id) === undefined">Ajouter au Panier</button>
+            <button @click="deleteFromPanier(article.id)" v-if="panier.articles.find(a => a.id === article.id) !== undefined">Supprimer du panier</button>
           </div>
         </div>
         <p>{{ article.description }}</p>
@@ -87,6 +89,12 @@ module.exports = {
         image: '',
         price: 0
       }
+    },
+    addToPanier (articleId){
+      this.$emit('add-to-panier', articleId)
+    },
+    deleteFromPanier (articleId){
+      this.$emit('delete-from-panier', articleId)
     }
   }
 }

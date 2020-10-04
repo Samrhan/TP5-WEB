@@ -60,7 +60,7 @@ router.post('/panier', (req, res) => {
     }
     req.session.panier.articles.push({id: parseInt(id), quantity: parseInt(quantity)})
     // on envoie l'article ajouté à l'utilisateur
-    res.status(300).json({message: 'Success'})
+    res.json({message: 'Success'})
 })
 
 /*
@@ -103,7 +103,7 @@ router.put('/panier/:articleId', (req, res) => {
     }
     req.session.panier.articles.find(a => a.id === id).quantity = quantity
 
-    res.status(300).json({message: "Success"})
+    res.json({message: "Success"})
 
 })
 
@@ -122,7 +122,7 @@ router.delete('/panier/:articleId', (req, res) => {
         return
     }
     req.session.panier.articles.splice(req.session.panier.articles.indexOf(req.session.panier.articles.find(a => a.id === id)), 1)
-    res.status(300).json({message: "success"})
+    res.json({message: "success"})
 
 })
 
