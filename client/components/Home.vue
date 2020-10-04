@@ -1,22 +1,16 @@
 <template>
-  <div>
-    <article v-for="article in articles" :key="article.id">
-      <div class="article-img">
-        <div :style="{ backgroundImage: 'url(' + article.image + ')' }">
+  <div id="main">
+    <article>
+      <div class="card" style="width: 18rem;" v-for="article in articles" :key="article.id"
+           v-on:click="navigateArticle(article.id)"
+           v-if="search === '' || article.name.toLowerCase().startsWith(search.toLowerCase()) ">
+        <img class="card-img-top" :src="article.image" alt="Card image cap">
+        <div class="card-body">
+          <h5 class="card-title">{{ article.name }} - {{ article.price }}€</h5>
+          <p class="card-text">{{ article.description }}</p>
         </div>
       </div>
-      <div class="article-content" v-if="editingArticle.id !== article.id">
-        <div class="article-title">
-          <h2>{{ article.name }} - {{ article.price }}€</h2>
-          <div>
-          <button @click="deleteArticle(article.id)">Supprimer</button>
-          <button @click="editArticle(article)">Modifier</button>
-            <button @click="addToPanier(article.id)"  v-if="panier.articles.find(a => a.id === article.id) === undefined">Ajouter au Panier</button>
-            <button @click="deleteFromPanier(article.id)" v-if="panier.articles.find(a => a.id === article.id) !== undefined">Supprimer du panier</button>
-          </div>
-        </div>
-        <p>{{ article.description }}</p>
-      </div>
+      <!--
       <div class="article-content" v-else>
         <div class="article-title">
           <h2><input type="text" v-model="editingArticle.name"> - <input type="number" v-model="editingArticle.price"></h2>
@@ -27,35 +21,67 @@
         </div>
         <p><textarea v-model="editingArticle.description"></textarea></p>
         <input type="text" v-model="editingArticle.image" placeholder="Lien vers l'image">
-      </div>
+      </div>-->
     </article>
-    <form @submit.prevent="addArticle">
-      <h2>Nouveau produit à ajouter</h2>
-      <input type="text" v-model="newArticle.name" placeholder="Nom du produit" required>
-      <input type="number" v-model="newArticle.price" placeholder="Prix" required>
-      <textarea type="text" v-model="newArticle.description" required></textarea>
-      <input type="text" v-model="newArticle.image" placeholder="Lien vers l'image">
-      <button type="submit">Ajouter</button>
-    </form>
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form class="needs-validation" novalidate>
+              <div class="form-row">
+                <div class="col-md-9 mb-9">
+                  <label for="newName">Nom du produit</label>
+                  <input type="text" class="form-control" id="newName" value="Mark" v-model="newArticle.name"
+                         placeholder="Cheval à Bascule" required
+                         required>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label for="newPrice">Prix</label>
+                  <input type="number" class="form-control" id="newPrice" v-model="newArticle.price" placeholder="10"
+                         value="Otto"
+                         required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="newDescription">Description</label>
+                <textarea type="text" class="form-control" id="newDescription" v-model="newArticle.description"
+                          placeholder="Un magnifique cheval" required></textarea>
+              </div>
+
+                <div class="form-group">
+                  <label for="newImage">Lien vers l'image</label>
+                  <input type="text" class="form-control" id="newImage" placeholder="https://..."
+                         v-model="newArticle.image" required>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary" v-on:click="addArticle" data-dismiss="modal">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 module.exports = {
   props: {
-    articles: { type: Array, default: [] },
-    panier: { type: Object }
+    search: {type: String, default: ''},
+    articles: {type: Array, default: []},
+    panier: {type: Object}
   },
-  data () {
+  data() {
     return {
       newArticle: {
-        name: '',
-        description: '',
-        image: '',
-        price: 0
-      },
-      editingArticle: {
-        id: -1,
         name: '',
         description: '',
         image: '',
@@ -64,37 +90,13 @@ module.exports = {
     }
   },
   methods: {
-    addArticle () {
+    addArticle() {
       this.$emit('add-article', this.newArticle)
     },
-    deleteArticle (articleId) {
-      this.$emit('delete-article', articleId)
-    },
-    editArticle (article) {
-      this.editingArticle.id = article.id
-      this.editingArticle.name = article.name
-      this.editingArticle.description = article.description
-      this.editingArticle.image = article.image
-      this.editingArticle.price = article.price
-    },
-    sendEditArticle () {
-      this.$emit('update-article', this.editingArticle)
-      this.abortEditArticle()
-    },
-    abortEditArticle () {
-      this.editingArticle = {
-        id: -1,
-        name: '',
-        description: '',
-        image: '',
-        price: 0
-      }
-    },
-    addToPanier (articleId){
-      this.$emit('add-to-panier', articleId)
-    },
-    deleteFromPanier (articleId){
-      this.$emit('delete-from-panier', articleId)
+    navigateArticle(id) {
+      router.replace({
+        name: 'article', params: {id: id.toString()}
+      })
     }
   }
 }
@@ -103,28 +105,49 @@ module.exports = {
 <style scoped>
 article {
   display: flex;
+  flex-wrap: wrap;
 }
 
-.article-img {
-  flex: 1;
+.card {
+  margin: 20px
 }
 
-.article-img div {
-  width: 100px;
-  height: 100px;
-  background-size: cover;
+.card-text {
+  min-height: 10vh;
 }
 
-.article-content {
-  flex: 3;
-}
-
-.article-title {
-  display: flex;
-  justify-content: space-between;
+.card-title {
+  min-height: 5vh;
 }
 
 textarea {
   width: 100%;
+}
+
+.card {
+  cursor: pointer;
+}
+
+.card:hover {
+  border: dodgerblue 3px solid;
+}
+
+#main {
+  width: 100%;
+  align-content: center;
+  line-height: 23px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 50px;
+  justify-content: center;
+}
+
+.form-row {
+  width: inherit;
+}
+
+.mb-3 {
+  width: inherit;
 }
 </style>

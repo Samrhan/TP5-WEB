@@ -1,27 +1,49 @@
 <template>
-  <div>
-    <article v-for="article in panier.articles" :key="article.id">
-      <div class="article-img">
-        <div :style="{ backgroundImage: 'url(' + articles.find(a=>a.id===article.id).image + ')' }">
-        </div>
-      </div>
-      <div class="article-content">
-        <div class="article-title">
-          <h2>{{ articles.find(a => a.id === article.id).name }} - {{
-              articles.find(a => a.id === article.id).price
-            }}€</h2>
-          <div>
-            <label>
-              <input type="number" v-model="article.quantity" v-on:change="changeQuantity(article.id, article.quantity)">
-            </label>
-            <button @click="deleteFromPanier(article.id)"
-                    v-if="panier.articles.find(a => a.id === article.id) !== undefined">Supprimer du panier
-            </button>
+  <div id="main">
+    <div>
+      <article v-for="article in panier.articles" :key="article.id">
+        <div class="card w-75">
+          <div class="card-body">
+            <img :src="articles.find(a=>a.id===article.id).image" alt="Card image cap">
+            <div id="description">
+              <h5 class="card-title">Card title</h5>
+              <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+              <div id="buttonlist">
+                <div class="dropdown">
+                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Qté : {{ article.quantity }}
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#" v-for="i in 10"
+                       v-on:click="changeQuantity(article.id, parseInt(i))">{{ i }}</a>
+                  </div>
+                </div>
+                <a href="#" class="btn btn-danger" v-on:click="deleteFromPanier(article.id)">Supprimer</a>
+              </div>
+            </div>
+            <div id="right"></div> <!--Cette div permet de centrer le prix à droite-->
+            <b>{{
+                new Intl.NumberFormat('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                }).format(articles.find(a => a.id === article.id).price * article.quantity)
+              }}</b>
           </div>
         </div>
-        <p>{{ articles.find(a => a.id === article.id).description }}</p>
+      </article>
+    </div>
+    <div class="card" style="width: 18rem;" id="total">
+      <div class="card-body" id="total-card">
+        <h5 class="card-title">Total : {{
+            new Intl.NumberFormat('fr-FR', {
+              style: 'currency',
+              currency: 'EUR'
+            }).format(total)
+          }}</h5>
+        <button type="button" class="btn btn-primary">Valider mon Panier</button>
       </div>
-    </article>
+    </div>
   </div>
 </template>
 
@@ -37,24 +59,61 @@ module.exports = {
   async mounted() {
   },
   methods: {
-    deleteFromPanier (articleId){
+    deleteFromPanier(articleId) {
       this.$emit('delete-from-panier', articleId)
     },
-    changeQuantity(articleId, articleQuantity){
+    changeQuantity(articleId, articleQuantity) {
       this.$emit('change-quantity', articleId, articleQuantity)
+    },
 
+  },
+  computed: {
+    total: function () {
+      let total = 0;
+      for (let i of this.panier.articles) {
+        total += i.quantity * this.articles.find(a => a.id === i.id).price
+      }
+      return total
     }
   }
 }
 </script>
 
 <style scoped>
+
+#main{
+  margin: 20px;
+}
+
+#total {
+  position: fixed;
+  right: 0;
+  top: 8vh;
+  max-width: 15vw !important;
+}
+
+#total-card{
+  display: flex;
+  flex-direction: column;
+}
+
+#buttonlist {
+  display: flex;
+  flex-direction: row;
+}
+
 article {
   display: flex;
 }
 
-.article-img {
-  flex: 1;
+.dropdown {
+  margin-right: 20px;
+}
+
+#right {
+  position: relative;
+  width: 100%;
+  right: 2px;
 }
 
 .article-img div {
@@ -63,13 +122,13 @@ article {
   background-size: cover;
 }
 
-.article-content {
-  flex: 3;
+.card-body {
+  display: flex;
+  flex-direction: row;
 }
 
-.article-title {
-  display: flex;
-  justify-content: space-between;
+.btn {
+  height: 4%;
 }
 
 textarea {
@@ -78,5 +137,15 @@ textarea {
 
 input {
   width: 5vw
+}
+
+img {
+  width: 10vw;
+  height: auto;
+  margin-right: 20px;
+}
+
+.card {
+  margin: 20px;
 }
 </style>

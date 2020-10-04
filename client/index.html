@@ -1,36 +1,76 @@
 <!doctype>
 <html lang="fr">
-    <head>
-        <meta charset="utf-8">
-        <title>Mon magasin en ligne 100% bons plans</title>
-        <!-- Load Vue followed by Vue Router -->
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/http-vue-loader/src/httpVueLoader.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue-router/dist/vue-router.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    </head>
-    <body>
-        <div id="app">
-          <header>
-            <h1>À la bonne franquette</h1>
-            <nav>
-              <router-link to='/'>Accueil</router-link>
-              <router-link to='/panier'>Panier</router-link>
-            </nav>
-          </header>
-          <main>
-            <router-view
-              :articles="articles"
-              :panier="panier"
-              @add-article="addArticle"
-              @delete-article="deleteArticle"
-              @update-article="updateArticle"
-              @add-to-panier="addToPanier"
-              @delete-from-panier="deleteFromPanier"
-              @change-quantity="changeQuantity"
-            ></router-view>
-          </main>
-        </div>
-        <script src="/vue-application.js"></script>
-    </body>
+<head>
+    <meta charset="utf-8">
+    <title>Mon magasin en ligne 100% bons plans</title>
+    <!-- Load Vue followed by Vue Router -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/http-vue-loader/src/httpVueLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-router/dist/vue-router.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="app">
+    <div id="navbar">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <router-link to='/'><a class="navbar-brand">À la bonne franquette</a></router-link>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link">
+                            <router-link to='/'>Accueil</router-link>
+                            <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">
+                            <router-link to='/panier'>Panier</router-link>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                            Ajouter un Article
+                        </button>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Rechercher un Article"
+                           aria-label="Search" v-model="search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="button">Rechercher
+                    </button>
+                </form>
+            </div>
+        </nav>
+    </div>
+    <main>
+        <router-view v-if="articles !== []"
+                     :articles="articles"
+                     :panier="panier"
+                     :search=this.search
+                     @add-article="addArticle"
+                     @delete-article="deleteArticle"
+                     @update-article="updateArticle"
+                     @add-to-panier="addToPanier"
+                     @delete-from-panier="deleteFromPanier"
+                     @change-quantity="changeQuantity"
+        ></router-view>
+    </main>
+</div>
+<script src="/vue-application.js"></script>
+</body>
 </html>

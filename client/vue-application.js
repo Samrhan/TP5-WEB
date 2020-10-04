@@ -1,19 +1,22 @@
 const Home = window.httpVueLoader('./components/Home.vue')
 const Panier = window.httpVueLoader('./components/Panier.vue')
+const Article = window.httpVueLoader('./components/Article.vue')
 
 const routes = [
     {path: '/', component: Home},
     {path: '/panier', component: Panier},
+    {path: '/article/:id', component: Article, name: 'article'}
 ]
 
 const router = new VueRouter({
     routes
 })
 
-var app = new Vue({
+const app = new Vue({
     router,
     el: '#app',
     data: {
+        search: '',
         articles: [],
         panier: {
             createdAt: null,
@@ -55,10 +58,10 @@ var app = new Vue({
             const res2 = await axios.get('/api/panier')
             this.panier = res2.data
         },
-        async changeQuantity(articleId, articleQuantity){
-            await axios.put('/api/panier/' + articleId, {quantity:articleQuantity})
+        async changeQuantity(articleId, articleQuantity) {
+            await axios.put('/api/panier/' + articleId, {quantity: articleQuantity})
             const res2 = await axios.get('/api/panier')
             this.panier = res2.data
         }
     }
-})
+});
