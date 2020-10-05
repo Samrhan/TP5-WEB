@@ -6,7 +6,7 @@
            v-if="search === '' || article.name.toLowerCase().startsWith(search.toLowerCase()) ">
         <img class="card-img-top" :src="article.image" alt="Card image cap">
         <div class="card-body">
-          <h5 class="card-title">{{ article.name }} - {{ article.price }}€</h5>
+          <h5 class="card-title">{{ article.name }} </h5>
           <p class="card-text">{{ article.description }}</p>
         </div>
       </div>
@@ -114,6 +114,7 @@ article {
 
 .card-text {
   min-height: 10vh;
+  text-align: justify;
 }
 
 .card-title {

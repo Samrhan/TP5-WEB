@@ -1,13 +1,13 @@
 <template>
   <div id="main">
-    <div>
+    <div id="listearticle">
       <article v-for="article in panier.articles" :key="article.id">
-        <div class="card w-75">
+        <div class="card w-100">
           <div class="card-body">
             <img :src="articles.find(a=>a.id===article.id).image" alt="Card image cap">
             <div id="description">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+              <h5 class="card-title">{{ articles.find(a => a.id === article.id).name }}</h5>
+              <p class="card-text">{{ articles.find(a => a.id === article.id).description }}</p>
               <div id="buttonlist">
                 <div class="dropdown">
                   <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
@@ -22,26 +22,67 @@
                 <a href="#" class="btn btn-danger" v-on:click="deleteFromPanier(article.id)">Supprimer</a>
               </div>
             </div>
-            <div id="right"></div> <!--Cette div permet de centrer le prix à droite-->
-            <b>{{
-                new Intl.NumberFormat('fr-FR', {
-                  style: 'currency',
-                  currency: 'EUR'
-                }).format(articles.find(a => a.id === article.id).price * article.quantity)
-              }}</b>
+            <div id="right">
+              <b>{{
+                  new Intl.NumberFormat('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  }).format(articles.find(a => a.id === article.id).price * article.quantity)
+                }}</b></div>
           </div>
         </div>
       </article>
     </div>
-    <div class="card" style="width: 18rem;" id="total">
-      <div class="card-body" id="total-card">
-        <h5 class="card-title">Total : {{
-            new Intl.NumberFormat('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
-            }).format(total)
-          }}</h5>
-        <button type="button" class="btn btn-primary">Valider mon Panier</button>
+    <div>
+      <div class="card" style="width: 18rem;" id="total">
+        <div class="card-body" id="total-card">
+          <h5 class="card-title">Total : {{
+              new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+              }).format(total)
+            }}</h5>
+          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmPurchase">Valider mon
+            Panier
+          </button>
+          <div class="modal fade" id="confirmPurchase" data-backdrop="static" data-keyboard="false" tabindex="-1"
+               aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="staticBackdropLabel">Confirmer</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body" v-if="panier.articles.length !== 0">
+                  <form>
+                    <div class="form-group">
+                      <label for="inputFirstname">Prénom</label>
+                      <input type="text" class="form-control" v-model="user.firstname" placeholder="Jean-Marc"
+                             id="inputFirstname" aria-describedby="emailHelp" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="inputName">Nom</label>
+                      <input type="text" class="form-control" v-model="user.name" id="inputName"
+                             placeholder="Morandini" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary"
+                            v-on:click="(user.name!=='' && user.firstname!== '') ? validePanier() : () => {return 0}"
+                            :data-dismiss="(user.name!=='' && user.firstname!== '') ? 'modal' : ''">Confirmer
+                    </button>
+                  </form>
+                </div>
+                <div class="modal-body" v-else>
+                  Votre panier est vide :(
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -54,7 +95,9 @@ module.exports = {
     panier: {type: Object}
   },
   data() {
-    return {}
+    return {
+      user: {firstname: '', name: ''}
+    }
   },
   async mounted() {
   },
@@ -64,15 +107,20 @@ module.exports = {
     },
     changeQuantity(articleId, articleQuantity) {
       this.$emit('change-quantity', articleId, articleQuantity)
+      this.panier.find(a=>a.id = articleId).quantity = articleQuantity
     },
+    validePanier() {
+      this.$emit('valid-panier', this.user)
+    }
 
   },
   computed: {
     total: function () {
       let total = 0;
-      for (let i of this.panier.articles) {
-        total += i.quantity * this.articles.find(a => a.id === i.id).price
-      }
+      if (this.panier)
+        for (let i of this.panier.articles) {
+          total += i.quantity * this.articles.find(a => a.id === i.id).price
+        }
       return total
     }
   }
@@ -81,18 +129,18 @@ module.exports = {
 
 <style scoped>
 
-#main{
+#main {
   margin: 20px;
+  display: flex;
+  flex-direction: row;
 }
 
 #total {
-  position: fixed;
+  position: relative;
   right: 0;
-  top: 8vh;
-  max-width: 15vw !important;
 }
 
-#total-card{
+#total-card {
   display: flex;
   flex-direction: column;
 }
@@ -108,12 +156,11 @@ article {
 
 .dropdown {
   margin-right: 20px;
+  height: auto !important;
 }
 
-#right {
-  position: relative;
-  width: 100%;
-  right: 2px;
+button {
+  height: auto !important;
 }
 
 .article-img div {
@@ -127,6 +174,10 @@ article {
   flex-direction: row;
 }
 
+#description {
+  width: 100%;
+}
+
 .btn {
   height: 4%;
 }
@@ -135,9 +186,6 @@ textarea {
   width: 100%;
 }
 
-input {
-  width: 5vw
-}
 
 img {
   width: 10vw;
@@ -147,5 +195,10 @@ img {
 
 .card {
   margin: 20px;
+  width: 100%;
+}
+
+#listearticle {
+  width: 100%;
 }
 </style>

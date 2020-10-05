@@ -43,16 +43,14 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                        <button v-if="$route.path === '/'"  type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
                             Ajouter un Article
                         </button>
                     </li>
                 </ul>
                 <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" type="search" placeholder="Rechercher un Article"
+                    <input class="form-control mr-sm-2" v-if="$route.path === '/'" type="search" placeholder="Rechercher un Article"
                            aria-label="Search" v-model="search">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="button">Rechercher
-                    </button>
                 </form>
             </div>
         </nav>
@@ -68,6 +66,7 @@
                      @add-to-panier="addToPanier"
                      @delete-from-panier="deleteFromPanier"
                      @change-quantity="changeQuantity"
+                     @valid-panier="validPanier"
         ></router-view>
     </main>
 </div>

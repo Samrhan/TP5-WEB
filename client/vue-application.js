@@ -49,19 +49,22 @@ const app = new Vue({
             this.articles.splice(index, 1)
         },
         async addToPanier(articleId) {
-            await axios.post('/api/panier', {id: articleId, quantity: 1})
-            const res2 = await axios.get('/api/panier')
-            this.panier = res2.data
+            let res = await axios.post('/api/panier', {id: articleId, quantity: 1})
+            console.log(res)
+            this.panier = res.data
         },
         async deleteFromPanier(articleId) {
-            await axios.delete('/api/panier/' + articleId)
-            const res2 = await axios.get('/api/panier')
-            this.panier = res2.data
+            const res = await axios.delete('/api/panier/' + articleId)
+            this.panier = res.data
         },
         async changeQuantity(articleId, articleQuantity) {
             await axios.put('/api/panier/' + articleId, {quantity: articleQuantity})
-            const res2 = await axios.get('/api/panier')
-            this.panier = res2.data
+        },
+        async validPanier(user){
+            await axios.post('/api/panier/pay', user)
+            const res = await axios.get('/api/panier')
+            this.panier = {articles:[]}
+
         }
     }
 });

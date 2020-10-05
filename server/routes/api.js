@@ -2,12 +2,13 @@ const express = require('express')
 const router = express.Router()
 const articles = require('../data/articles.js')
 
+
 class Panier {
     constructor() {
         this.createdAt = new Date()
         this.updatedAt = new Date()
         this.articles = []
-    }
+    };
 }
 
 /**
@@ -60,7 +61,7 @@ router.post('/panier', (req, res) => {
     }
     req.session.panier.articles.push({id: parseInt(id), quantity: parseInt(quantity)})
     // on envoie l'article ajouté à l'utilisateur
-    res.json({message: 'Success'})
+    res.json(req.session.panier)
 })
 
 /*
@@ -122,7 +123,7 @@ router.delete('/panier/:articleId', (req, res) => {
         return
     }
     req.session.panier.articles.splice(req.session.panier.articles.indexOf(req.session.panier.articles.find(a => a.id === id)), 1)
-    res.json({message: "success"})
+    res.json(req.session.panier)
 
 })
 

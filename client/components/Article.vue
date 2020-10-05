@@ -15,13 +15,19 @@
           <input v-else class="card-title" v-model="editingArticle.name">
           <div></div>
           <p v-if="editingArticle.id !== i.id" class="card-text">{{ i.description }}</p>
-          <textarea v-bind:style="{width:'80%'}" v-else class="card-text" v-model="editingArticle.description"></textarea>
+          <textarea v-bind:style="{width:'80%'}" v-else class="card-text"
+                    v-model="editingArticle.description"></textarea>
         </div>
       </div>
       <div class="card" style="width: 18rem;" id="price">
         <div class="card-body">
-          <h5 v-if="editingArticle.id !== i.id" class="card-subtitle">{{ i.price }}€</h5>
-          <input v-else  class="card-subtitle" v-model="editingArticle.price">
+          <h5 v-if="editingArticle.id !== i.id" class="card-subtitle">{{
+              new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+              }).format(i.price)
+            }}</h5>
+          <input v-else class="card-subtitle" v-model="editingArticle.price">
           <div class="buttonlist" v-if="editingArticle.id !== i.id">
             <button type="button" class="btn btn-danger"
                     @click="deleteFromPanier(i.id)"
