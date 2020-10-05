@@ -107,7 +107,6 @@ module.exports = {
     },
     changeQuantity(articleId, articleQuantity) {
       this.$emit('change-quantity', articleId, articleQuantity)
-      this.panier.find(a=>a.id = articleId).quantity = articleQuantity
     },
     validePanier() {
       this.$emit('valid-panier', this.user)

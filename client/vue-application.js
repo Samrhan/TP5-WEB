@@ -59,6 +59,7 @@ const app = new Vue({
         },
         async changeQuantity(articleId, articleQuantity) {
             await axios.put('/api/panier/' + articleId, {quantity: articleQuantity})
+            this.panier.articles.find(a => a.id === articleId).quantity = articleQuantity
         },
         async validPanier(user){
             await axios.post('/api/panier/pay', user)
