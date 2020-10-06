@@ -55,7 +55,7 @@ router.post('/panier', (req, res) => {
     if (articles.find(i => i.id === parseInt(id)) === undefined) {
         res.status(400).json({message: "L'article n'existe pas"})
     }
-    if (req.session.panier.articles.find(a => a.id === id)) {
+    if (req.session.panier.articles.find(a => a.id === parseInt(id))) {
         res.status(400).json({message: "L'article existe déjà"})
         return
     }
