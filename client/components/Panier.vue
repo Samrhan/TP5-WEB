@@ -55,23 +55,11 @@
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-                <div class="modal-body" v-if="panier.articles.length !== 0">
-                  <form>
-                    <div class="form-group">
-                      <label for="inputFirstname">Prénom</label>
-                      <input type="text" class="form-control" v-model="user.firstname" placeholder="Frédéric"
-                             id="inputFirstname" aria-describedby="emailHelp" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="inputName">Nom</label>
-                      <input type="text" class="form-control" v-model="user.name" id="inputName"
-                             placeholder="Meunier" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary"
-                            v-on:click="(user.name!=='' && user.firstname!== '') ? validePanier() : () => {return 0}"
-                            :data-dismiss="(user.name!=='' && user.firstname!== '') ? 'modal' : ''">Confirmer
-                    </button>
-                  </form>
+                <div class="modal-body" v-if="panier.articles.length !== 0 ">
+                  Êtes-vous sûr de vouloir effectuer cet achat ?
+                  <button type="button" class="btn btn-primary" data-dismiss="modal"
+                          v-on:click="validePanier">Valider mon Panier
+                  </button>
                 </div>
                 <div class="modal-body" v-else>
                   Votre panier est vide :(
@@ -92,7 +80,8 @@
 module.exports = {
   props: {
     articles: {type: Array, default: []},
-    panier: {type: Object}
+    panier: {type: Object},
+    user: {type: Object}
   },
   data() {
     return {
@@ -109,7 +98,7 @@ module.exports = {
       this.$emit('change-quantity', articleId, articleQuantity)
     },
     validePanier() {
-      this.$emit('valid-panier', this.user)
+      this.$emit('valid-panier')
     }
 
   },

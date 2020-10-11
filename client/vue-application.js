@@ -2,17 +2,20 @@ const Home = window.httpVueLoader('./components/Home.vue')
 const Panier = window.httpVueLoader('./components/Panier.vue')
 const Article = window.httpVueLoader('./components/Article.vue')
 const Register = window.httpVueLoader('./components/Register.vue')
+const Login = window.httpVueLoader('./components/Login.vue')
 
 const routes = [
-    {path: '/', component: Home},
+    {path: '/', component: Home, name: 'home'},
     {path: '/panier', component: Panier},
     {path: '/article/:id', component: Article, name: 'article'},
-    {path: '/register', component: Register}
+    {path: '/register', component: Register},
+    {path: '/login', component: Login, name: 'login'}
 ]
 
 const router = new VueRouter({
     routes
 })
+
 
 const app = new Vue({
     router,
@@ -24,13 +27,18 @@ const app = new Vue({
             createdAt: null,
             updatedAt: null,
             articles: []
-        }
+        },
+        user: undefined,
+        invaliddata: false
     },
     async mounted() {
         const res = await axios.get('/api/articles')
         this.articles = res.data
         const res2 = await axios.get('/api/panier')
         this.panier = res2.data
+        await axios.get('/api/me').then(res => this.user = res.data).catch(error => {
+            this.user = undefined
+        });
     },
     methods: {
         async addArticle(article) {
@@ -52,7 +60,6 @@ const app = new Vue({
         },
         async addToPanier(articleId) {
             let res = await axios.post('/api/panier', {id: articleId, quantity: 1})
-            console.log(res)
             this.panier = res.data
         },
         async deleteFromPanier(articleId) {
@@ -63,11 +70,39 @@ const app = new Vue({
             await axios.put('/api/panier/' + articleId, {quantity: articleQuantity})
             this.panier.articles.find(a => a.id === articleId).quantity = articleQuantity
         },
-        async validPanier(user){
-            await axios.post('/api/panier/pay', user)
-            const res = await axios.get('/api/panier')
-            this.panier = {articles:[]}
-
+        async validPanier() {
+            await axios.post('/api/panier/pay')
+                .then(res => this.panier = {articles: []})
+                .catch(error => {
+                if (error.response.status === 403) {
+                    router.replace({
+                        name: 'login'
+                    })
+                }
+            });
+        },
+        async register(data) {
+            await axios.post('/api/register', data).then(response => {
+                router.replace({
+                    name: 'home'
+                })
+            }).catch(error => {
+                if (error.response.data.code === 0) {
+                    this.invaliddata = true
+                }
+            });
+        },
+        async login(data) {
+            await axios.post('/api/login', data).then(response => {
+                this.user = response.data;
+                router.replace({
+                    name: 'home'
+                })
+            }).catch(error => {
+                if (error.response.data.code === 0) {
+                    this.invaliddata = true
+                }
+            });
         }
     }
 });

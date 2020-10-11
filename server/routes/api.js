@@ -15,30 +15,19 @@ const client = new Client({
 client.connect()
 
 
-class Panier {
+class User {
     constructor() {
         this.createdAt = new Date()
         this.updatedAt = new Date()
+        this.data // undefined si l'utilisateur n'est pas connecté
         this.articles = []
     };
 }
 
-/**
- * Dans ce fichier, vous trouverez des exemples de requêtes GET, POST, PUT et DELETE
- * Ces requêtes concernent l'ajout ou la suppression d'articles sur le site
- * Votre objectif est, en apprenant des exemples de ce fichier, de créer l'API pour le panier de l'utilisateur
- *
- * Notre site ne contient pas d'authentification, ce qui n'est pas DU TOUT recommandé.
- * De même, les informations sont réinitialisées à chaque redémarrage du serveur, car nous n'avons pas de système de base de données pour faire persister les données
- */
-
-/**
- * Notre mécanisme de sauvegarde des paniers des utilisateurs sera de simplement leur attribuer un panier grâce à req.session, sans authentification particulière
- */
 router.use((req, res, next) => {
     // l'utilisateur n'est pas reconnu, lui attribuer un panier dans req.session
-    if (typeof req.session.panier === 'undefined') {
-        req.session.panier = new Panier()
+    if (typeof req.session.user === 'undefined') {
+        req.session.user = new User()
     }
     next()
 })
@@ -48,17 +37,25 @@ router.use((req, res, next) => {
 router.post('/register', async (req, res) => {
     const email = req.body.email
     const passwd = req.body.passwd
-
+    console.log(email, passwd)
     // vérification de la validité des données d'entrée
     if (typeof email !== 'string' || email === '' ||
         typeof passwd !== 'string' || passwd === '') {
-        res.status(400).json({message: 'bad request'})
+        res.status(400).json({message: 'bad request', code: 3})
         return
     }
     if (email.endsWith('--')) { // Si on a tenté une injection SQL (useless mais drôle)
-        res.status(400).json({message: "Don't mess with me :angyy:"})
+        res.status(401).json({message: "Don't mess with me :angyy:", code: 1})
         return
     }
+
+    // on revérifie les données du formulaire, au cas ou qqn utilise postman ou burp
+    let validForm = !passwd.match(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8,}$/) && !email.match(/.*@.*\..{2,}/);
+    if (validForm) {
+        res.status(401).json({message: "use the form :)", code: 2})
+        return
+    }
+
     let query = new Promise((resolve, reject) => {
         client.query('SELECT * FROM users WHERE email = $1', [email], (err, rows) => {
             if (err) reject(err)
@@ -73,19 +70,63 @@ router.post('/register', async (req, res) => {
         await query;
         let passwd_hash = await bcrypt.hash(passwd, 10)
         await client.query('INSERT INTO users(email, password) VALUES ($1,$2)', [email, passwd_hash])
-        res.status(200).json({'status':'success'})
+        res.json({'status': 'success'})
 
     } catch (err) {
-        res.status(400).json({message:err})
+        res.status(401).json({message: err, code: 0})
     }
     // on envoie l'article ajouté à l'utilisateur
+})
+
+router.post("/login", async (req, res) => {
+    const passwd = req.body.passwd;
+    const email = req.body.email;
+    if (typeof email !== 'string' || email === '' ||
+        typeof passwd !== 'string' || passwd === '') {
+        res.status(400).json({message: 'bad request', code: 3})
+        return
+    }
+    if (email.endsWith('--')) { // Si on a tenté une injection SQL (useless mais drôle)
+        res.status(401).json({message: "Don't mess with me :angyy:", code: 1})
+        return
+    }
+    let query = new Promise(async (resolve, reject) => {
+        client.query('SELECT * FROM users WHERE email = $1', [email], async (err, rows) => {
+            if (err) reject(err)
+            else {
+                if (rows.rows.length <= 0) {
+                    reject()
+                } else {
+                    let data = rows.rows[0];
+                    let samePasswd = await bcrypt.compare(passwd, data.password);
+                    if (samePasswd) {
+                        resolve({id: data.id, email: data.email})
+                    } else reject()
+                }
+            }
+        })
+    })
+    try {
+        let data = await query;
+        req.session.user.data = data;
+        res.json(data)
+
+    } catch (err) {
+        res.status(401).json({message: err, code: 0})
+    }
+})
+
+router.get("/me", async (req, res) => {
+    if (req.session.user.data) {
+        res.json(req.session.user.data)
+    } else res.status(404).json({message: 'Non connecté', code: 5})
 })
 
 /*
  * Cette route doit retourner le panier de l'utilisateur, grâce à req.session
  */
 router.get('/panier', (req, res) => {
-    res.json(req.session.panier)
+    res.json(req.session.user)
 })
 
 /*
@@ -105,13 +146,13 @@ router.post('/panier', (req, res) => {
     if (articles.find(i => i.id === parseInt(id)) === undefined) {
         res.status(400).json({message: "L'article n'existe pas"})
     }
-    if (req.session.panier.articles.find(a => a.id === parseInt(id))) {
+    if (req.session.user.articles.find(a => a.id === parseInt(id))) {
         res.status(400).json({message: "L'article existe déjà"})
         return
     }
-    req.session.panier.articles.push({id: parseInt(id), quantity: parseInt(quantity)})
+    req.session.user.articles.push({id: parseInt(id), quantity: parseInt(quantity)})
     // on envoie l'article ajouté à l'utilisateur
-    res.json(req.session.panier)
+    res.json(req.session.user)
 })
 
 /*
@@ -119,19 +160,15 @@ router.post('/panier', (req, res) => {
  * Le panier est ensuite supprimé grâce à req.session.destroy()
  */
 router.post('/panier/pay', (req, res) => {
-    const name = req.body.name
-    const firstname = req.body.firstname
-    if (typeof name !== 'string' || name === ''
-        || typeof firstname !== 'string' || firstname === '') {
-        res.status(400).json({message: 'bad request'})
-        return
-    }
-    if (req.session.panier.articles.length === 0) {
+    if (req.session.user.articles.length === 0) {
         res.status(400).json({message: "Votre panier est vide"})
         return
     }
-    req.session.destroy()
-    res.json({message: `Merci ${firstname[0].toUpperCase() + firstname.substr(1, firstname.length)} ${name.toUpperCase()} pour votre achat`})
+    if (req.session.user.data){
+        req.session.user.articles = []
+        res.json({message: `achat effectué`})}
+    else
+        res.status(403).json({message:'Vous devez être connecté pour effectuer cet achat'})
 })
 
 /*
@@ -148,11 +185,11 @@ router.put('/panier/:articleId', (req, res) => {
     }
     id = parseInt(id)
     quantity = parseInt(quantity)
-    if (req.session.panier.articles.find(a => a.id === id) === undefined) {
+    if (req.session.user.articles.find(a => a.id === id) === undefined) {
         res.status(404).json({message: "Article not found"})
         return
     }
-    req.session.panier.articles.find(a => a.id === id).quantity = quantity
+    req.session.user.articles.find(a => a.id === id).quantity = quantity
 
     res.json({message: "Success"})
 
@@ -168,12 +205,12 @@ router.delete('/panier/:articleId', (req, res) => {
         return
     }
     id = parseInt(id)
-    if (req.session.panier.articles.find(a => a.id === id) === undefined) {
+    if (req.session.user.articles.find(a => a.id === id) === undefined) {
         res.status(404).json({message: "article not found"})
         return
     }
-    req.session.panier.articles.splice(req.session.panier.articles.indexOf(req.session.panier.articles.find(a => a.id === id)), 1)
-    res.json(req.session.panier)
+    req.session.user.articles.splice(req.session.user.articles.indexOf(req.session.user.articles.find(a => a.id === id)), 1)
+    res.json(req.session.user)
 
 })
 

@@ -48,10 +48,15 @@
                         </button>
                     </li>
                 </ul>
-                <ul class="navbar-nav my-2 my-lg-0">
+                <ul class="navbar-nav my-2 my-lg-0" v-if="!user">
                     <li class="nav-item active">
                         <a class="nav-link">
                             <router-link to='/register'>S'inscrire</router-link>
+                            <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link">
+                            <router-link to='/login'>Se Connecter</router-link>
                             <span class="sr-only">(current)</span></a>
                     </li>
                 </ul>
@@ -67,6 +72,8 @@
                      :articles="articles"
                      :panier="panier"
                      :search=this.search
+                     :invaliddata="invaliddata"
+                     :user="user"
                      @add-article="addArticle"
                      @delete-article="deleteArticle"
                      @update-article="updateArticle"
@@ -74,6 +81,8 @@
                      @delete-from-panier="deleteFromPanier"
                      @change-quantity="changeQuantity"
                      @valid-panier="validPanier"
+                     @register="register"
+                     @login="login"
         ></router-view>
     </main>
 </div>
