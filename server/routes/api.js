@@ -2,6 +2,18 @@ const express = require('express')
 const router = express.Router()
 const articles = require('../data/articles.js')
 
+const bcrypt = require('bcrypt')
+const {Client} = require('pg')
+
+const client = new Client({
+    user: 'postgres',
+    host: 'localhost',
+    password: 'kali',
+    database: 'TP5'
+})
+
+client.connect()
+
 
 class Panier {
     constructor() {
@@ -29,6 +41,44 @@ router.use((req, res, next) => {
         req.session.panier = new Panier()
     }
     next()
+})
+
+/** Routes relatives à la BDD **/
+
+router.post('/register', async (req, res) => {
+    const email = req.body.email
+    const passwd = req.body.passwd
+
+    // vérification de la validité des données d'entrée
+    if (typeof email !== 'string' || email === '' ||
+        typeof passwd !== 'string' || passwd === '') {
+        res.status(400).json({message: 'bad request'})
+        return
+    }
+    if (email.endsWith('--')) { // Si on a tenté une injection SQL (useless mais drôle)
+        res.status(400).json({message: "Don't mess with me :angyy:"})
+        return
+    }
+    let query = new Promise((resolve, reject) => {
+        client.query('SELECT * FROM users WHERE email = $1', [email], (err, rows) => {
+            if (err) reject(err)
+            else {
+                if (rows.rows.length > 0) {
+                    reject("L'utilisateur existe déjà")
+                } else resolve()
+            }
+        })
+    })
+    try {
+        await query;
+        let passwd_hash = await bcrypt.hash(passwd, 10)
+        await client.query('INSERT INTO users(email, password) VALUES ($1,$2)', [email, passwd_hash])
+        res.status(200).json({'status':'success'})
+
+    } catch (err) {
+        res.status(400).json({message:err})
+    }
+    // on envoie l'article ajouté à l'utilisateur
 })
 
 /*
@@ -73,15 +123,15 @@ router.post('/panier/pay', (req, res) => {
     const firstname = req.body.firstname
     if (typeof name !== 'string' || name === ''
         || typeof firstname !== 'string' || firstname === '') {
-        res.status(400).json({message:'bad request'})
+        res.status(400).json({message: 'bad request'})
         return
     }
-    if(req.session.panier.articles.length === 0){
-        res.status(400).json({message:"Votre panier est vide"})
+    if (req.session.panier.articles.length === 0) {
+        res.status(400).json({message: "Votre panier est vide"})
         return
     }
     req.session.destroy()
-    res.json({message:`Merci ${firstname[0].toUpperCase()+firstname.substr(1, firstname.length)} ${name.toUpperCase()} pour votre achat`})
+    res.json({message: `Merci ${firstname[0].toUpperCase() + firstname.substr(1, firstname.length)} ${name.toUpperCase()} pour votre achat`})
 })
 
 /*
@@ -231,5 +281,6 @@ router.route('/article/:articleId')
         articles.splice(index, 1) // remove the article from the array
         res.send()
     })
+
 
 module.exports = router

@@ -48,6 +48,13 @@
                         </button>
                     </li>
                 </ul>
+                <ul class="navbar-nav my-2 my-lg-0">
+                    <li class="nav-item active">
+                        <a class="nav-link">
+                            <router-link to='/register'>S'inscrire</router-link>
+                            <span class="sr-only">(current)</span></a>
+                    </li>
+                </ul>
                 <form class="form-inline my-2 my-lg-0">
                     <input class="form-control mr-sm-2" v-if="$route.path === '/'" type="search" placeholder="Rechercher un Article"
                            aria-label="Search" v-model="search">

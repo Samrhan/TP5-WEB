@@ -59,13 +59,13 @@
                   <form>
                     <div class="form-group">
                       <label for="inputFirstname">Prénom</label>
-                      <input type="text" class="form-control" v-model="user.firstname" placeholder="Jean-Marc"
+                      <input type="text" class="form-control" v-model="user.firstname" placeholder="Frédéric"
                              id="inputFirstname" aria-describedby="emailHelp" required>
                     </div>
                     <div class="form-group">
                       <label for="inputName">Nom</label>
                       <input type="text" class="form-control" v-model="user.name" id="inputName"
-                             placeholder="Morandini" required>
+                             placeholder="Meunier" required>
                     </div>
                     <button type="submit" class="btn btn-primary"
                             v-on:click="(user.name!=='' && user.firstname!== '') ? validePanier() : () => {return 0}"
