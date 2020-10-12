@@ -76,7 +76,6 @@ async function getPanier(id) {
                         let json = {id: i.article, quantity: i.quantity}
                         tab.push(json)
                     }
-                    console.log(tab)
                     resolve(tab)
                 }
             }
@@ -185,10 +184,7 @@ router.post("/login", async (req, res) => {
         let panier = await getPanier(data.id)
         for (let i of req.session.user.cache) {
             if (!panier || !panier.find(j => j.id === i.id)) //on ajoute pas les doublons
-                await client.query('INSERT INTO panier("user", article, quantity) VALUES ($1,$2,$3)', [data.id, i.id, i.quantity], (err, res) => {
-                        if (err) console.log(err)
-                    }
-                )
+                await client.query('INSERT INTO panier("user", article, quantity) VALUES ($1,$2,$3)', [data.id, i.id, i.quantity])
         }
         let response = {}
         response.data = data;
