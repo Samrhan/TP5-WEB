@@ -201,6 +201,15 @@ router.post("/login", async (req, res) => {
     }
 })
 
+router.post('/logout', (req, res)=>{
+    if(req.session.user.data){
+        req.session.user.data = undefined
+        res.send()
+    }else{
+        res.status(400).json({message:'Non authentifié'})
+    }
+})
+
 router.get("/me", async (req, res) => {
     if (req.session.user.data) {
         res.json(req.session.user.data)

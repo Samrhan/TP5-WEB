@@ -108,6 +108,12 @@ const app = new Vue({
                     this.invaliddata = true
                 }
             });
+        },
+        async logout() {
+            await axios.post('/api/logout')
+            this.panier.articles = []
+            this.user = undefined
         }
+
     }
 });
