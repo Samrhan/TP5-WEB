@@ -65,7 +65,6 @@ router.use((req, res, next) => {
 router.post('/register', async (req, res) => {
     const email = req.body.email
     const passwd = req.body.passwd
-    console.log(email, passwd)
     // vérification de la validité des données d'entrée
     if (typeof email !== 'string' || email === '' ||
         typeof passwd !== 'string' || passwd === '') {
