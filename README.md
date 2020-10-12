@@ -24,7 +24,8 @@ user
  
 articles : 
  - id : serial, primary key
- - infos : JSON
+ - infos : JSON<br>
+ _Il suffit de décommenter le début de api.js pour transférer les données dans la db_
  
 panier : 
  - user : int
