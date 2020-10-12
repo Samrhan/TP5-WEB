@@ -105,7 +105,6 @@ module.exports = {
       }
     },
     addToPanier(articleId) {
-      console.log(articleId)
       this.$emit('add-to-panier', articleId)
     }
   }

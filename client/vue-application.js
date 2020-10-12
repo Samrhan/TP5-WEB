@@ -36,7 +36,11 @@ const app = new Vue({
         this.articles = res.data
         const res2 = await axios.get('/api/panier')
         this.panier = res2.data
-        await axios.get('/api/me').then(res => this.user = res.data).catch(error => {
+        await axios.get('/api/me').then(res => {
+            if (res.status !== 304)
+                this.user = res.data
+            else this.user = undefined
+        }).catch(error => {
             this.user = undefined
         });
     },
@@ -74,12 +78,12 @@ const app = new Vue({
             await axios.post('/api/panier/pay')
                 .then(res => this.panier = {articles: []})
                 .catch(error => {
-                if (error.response.status === 403) {
-                    router.replace({
-                        name: 'login'
-                    })
-                }
-            });
+                    if (error.response.status === 403) {
+                        router.replace({
+                            name: 'login'
+                        })
+                    }
+                });
         },
         async register(data) {
             await axios.post('/api/register', data).then(response => {

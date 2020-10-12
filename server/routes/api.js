@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const articles = require('../data/articles.js')
+//const articles = require('../data/articles.js')
 
 const bcrypt = require('bcrypt')
 const {Client} = require('pg')
@@ -14,6 +14,34 @@ const client = new Client({
 
 client.connect()
 
+/* A executer pour insérer les articles de base dans la base de données.
+La table contient une colonne serial et un colonne infos de type json.
+for (let i of articles) {
+    let json = {name: i.name, description: i.description, image: i.image, price: i.price}
+    let strJson = JSON.stringify(json)
+    client.query('INSERT INTO articles(infos) VALUES ($1)', [strJson])
+}
+*/
+
+async function getArticle(id) {
+    let promise = new Promise((resolve, reject) => {
+        client.query('SELECT infos FROM articles WHERE id = $1', [id], (err, rows) => {
+            if (err) reject(err)
+            else {
+                if (rows.rows.length > 0)
+                    resolve(rows.rows[0].infos)
+                else
+                    reject()
+            }
+            resolve()
+        })
+    })
+    try {
+        return await promise
+    } catch {
+        return undefined
+    }
+}
 
 class User {
     constructor() {
@@ -119,7 +147,7 @@ router.post("/login", async (req, res) => {
 router.get("/me", async (req, res) => {
     if (req.session.user.data) {
         res.json(req.session.user.data)
-    } else res.status(404).json({message: 'Non connecté', code: 5})
+    } else res.status(204).json({message: 'Non connecté', code: 5})
 })
 
 /*
@@ -133,7 +161,7 @@ router.get('/panier', (req, res) => {
  * Cette route doit ajouter un article au panier, puis retourner le panier modifié à l'utilisateur
  * Le body doit contenir l'id de l'article, ainsi que la quantité voulue
  */
-router.post('/panier', (req, res) => {
+router.post('/panier', async (req, res) => {
     const id = req.body.id
     const quantity = req.body.quantity
 
@@ -143,8 +171,10 @@ router.post('/panier', (req, res) => {
         res.status(400).json({message: 'bad request'})
         return
     }
-    if (articles.find(i => i.id === parseInt(id)) === undefined) {
+    let article = await getArticle(id)
+    if (!article) {
         res.status(400).json({message: "L'article n'existe pas"})
+        return
     }
     if (req.session.user.articles.find(a => a.id === parseInt(id))) {
         res.status(400).json({message: "L'article existe déjà"})
@@ -164,11 +194,11 @@ router.post('/panier/pay', (req, res) => {
         res.status(400).json({message: "Votre panier est vide"})
         return
     }
-    if (req.session.user.data){
+    if (req.session.user.data) {
         req.session.user.articles = []
-        res.json({message: `achat effectué`})}
-    else
-        res.status(403).json({message:'Vous devez être connecté pour effectuer cet achat'})
+        res.json({message: `achat effectué`})
+    } else
+        res.status(403).json({message: 'Vous devez être connecté pour effectuer cet achat'})
 })
 
 /*
@@ -218,8 +248,31 @@ router.delete('/panier/:articleId', (req, res) => {
 /**
  * Cette route envoie l'intégralité des articles du site
  */
-router.get('/articles', (req, res) => {
-    res.json(articles)
+router.get('/articles', async (req, res) => {
+    let promise = new Promise((resolve, reject) => {
+        client.query('SELECT * FROM articles', [], (err, rows) => {
+            if (err) reject(err)
+            else {
+                if (rows.rows.length === 0) {
+                    reject({message: 'aucun article dans la bdd', code: 1})
+                } else {
+                    let tab = [];
+                    for (let i of rows.rows) {
+                        let json = i.infos;
+                        json.id = i.id
+                        tab.push(json)
+                    }
+                    resolve(tab)
+                }
+            }
+        })
+    })
+    try {
+        let articles = await promise;
+        res.json(articles)
+    } catch (err) {
+        res.status(404).json(err)
+    }
 })
 
 /**
@@ -244,13 +297,12 @@ router.post('/article', (req, res) => {
     }
 
     const article = {
-        id: articles.length + 1,
         name: name,
         description: description,
         image: image,
         price: price
     }
-    articles.push(article)
+    client.query('INSERT INTO articles(infos) VALUES($1)', [JSON.stringify(article)])
     // on envoie l'article ajouté à l'utilisateur
     res.json(article)
 })
@@ -263,7 +315,7 @@ router.post('/article', (req, res) => {
  * - DELETE /article/:articleId
  * Comme ces trois routes ont un comportement similaire, on regroupe leurs fonctionnalités communes dans un middleware
  */
-function parseArticle(req, res, next) {
+async function parseArticle(req, res, next) {
     const articleId = parseInt(req.params.articleId)
 
     // si articleId n'est pas un nombre (NaN = Not A Number), alors on s'arrête
@@ -273,8 +325,7 @@ function parseArticle(req, res, next) {
     }
     // on affecte req.articleId pour l'exploiter dans toutes les routes qui en ont besoin
     req.articleId = articleId
-
-    const article = articles.find(a => a.id === req.articleId)
+    let article = await getArticle(articleId);
     if (!article) {
         res.status(404).json({message: 'article ' + articleId + ' does not exist'})
         return
@@ -300,22 +351,17 @@ router.route('/article/:articleId')
      *   Si on voulait persister l'information, on utiliserait une BDD (mysql, etc.)
      */
     .put(parseArticle, (req, res) => {
-        const name = req.body.name
-        const description = req.body.description
-        const image = req.body.image
-        const price = parseInt(req.body.price)
-
-        req.article.name = name
-        req.article.description = description
-        req.article.image = image
-        req.article.price = price
+        let json = {};
+        json.name = req.body.name
+        json.description = req.body.description
+        json.image = req.body.image
+        json.price = parseInt(req.body.price)
+        client.query('UPDATE articles SET infos = $1 WHERE id = $2', [JSON.stringify(json), req.params.articleId])
         res.send()
     })
 
     .delete(parseArticle, (req, res) => {
-        const index = articles.findIndex(a => a.id === req.articleId)
-
-        articles.splice(index, 1) // remove the article from the array
+        client.query('DELETE FROM articles WHERE id = $1', [req.params.articleId])
         res.send()
     })
 

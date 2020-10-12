@@ -85,7 +85,6 @@ module.exports = {
   },
   data() {
     return {
-      user: {firstname: '', name: ''}
     }
   },
   async mounted() {
