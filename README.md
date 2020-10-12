@@ -10,11 +10,6 @@ Tout le monde peut ajouter et éditer les articles
 
 `npm install`
 
-# Run
-
-`npm start`
-#
-
 **Base de données requises (PostgreSQL)**
 
 user
@@ -31,3 +26,10 @@ panier :
  - user : int
  - article : int
  - quantity : int
+
+
+# Run
+
+`npm start`
+#
+
