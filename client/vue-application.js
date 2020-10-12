@@ -97,8 +97,9 @@ const app = new Vue({
             });
         },
         async login(data) {
-            await axios.post('/api/login', data).then(response => {
-                this.user = response.data;
+            await axios.post('/api/login', data).then(async response => {
+                this.user = response.data.data;
+                this.panier.articles = response.data.panier;
                 router.replace({
                     name: 'home'
                 })
